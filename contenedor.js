@@ -2,9 +2,9 @@ const fs = require('fs')
 
 class Contenedor {
 
-    constructor(ruta) {
-        this.ruta = ruta,
-        this.data = []
+    constructor(filename) {
+        this.filename = filename,
+        this.products = []
 
         try {
             this.read()
@@ -14,8 +14,13 @@ class Contenedor {
         }
     }
 
+    read() {
+        return fs.promises.readFile(this.filename, 'utf-8')
+            .then(data => JSON.parse(data))
+    }
+
     write() {
-        fs.promises.writeFile
+        return fs.promises.writeFile(this.filename, JSON.stringify(this.products))
     }
 
 
@@ -24,23 +29,39 @@ class Contenedor {
         
     }
     async getById(id) {
-        const products = await this.getAll()
-        const productById = products.find(p => p.id == id)
-        return productById
+        try {
+            const products = await this.getAll()
+            const productById = products.find(p => p.id == id)
+            return productById
+        } catch(error) {
+            console.log(error)
+        }
+        
     }
     async getAll() {
         try {
-            const products = await fs.promises.readFile(this.ruta, 'utf-8')
-            return JSON.parse(products)
+            const data = await this.read();
+            return data
         } catch(error) {
-            return error
+            console.log(error)
         }
     }
     async deleteById(id) {
-        
+        const idx = this.products.findIndex(p => p.id == id)
+        this.products.splice(idx, 1)
+        try {
+            await this.write()
+        } catch(error) {
+            console.log(error)
+        }
     }
     async deleteAll() {
-        
+        this.products = []
+        try {
+            await this.write()
+        } catch(error) {
+            console.log(error)
+        }
     }
 }
 
